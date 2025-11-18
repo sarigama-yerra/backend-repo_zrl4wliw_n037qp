@@ -21,6 +21,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Allowed clubs list for Maltese Youth League enforcement
+ALLOWED_CLUBS = [
+    "HIBS",
+    "BIRKIRKARA",
+    "BALZAN",
+    "ZABBAR",
+    "NAXXAR",
+    "QORMI",
+    "MARSASKALA",
+    "KIRKOP",
+    "GOZO",
+    "MELLIEHA",
+]
+ALLOWED_CLUBS_SET = set(ALLOWED_CLUBS)
+
 # Helpers
 
 def oid(id_str: str) -> ObjectId:
@@ -261,7 +276,37 @@ def team_info(league_id: str, team_id: str):
         "results": [map_match(m) for m in results]
     }
 
-# Seed example league with provided teams
+# Admin: enforce the exact clubs list for a league (delete extras, add missing)
+@app.post("/api/leagues/{league_id}/enforce-teams")
+def enforce_teams(league_id: str):
+    if not db["league"].find_one({"_id": oid(league_id)}):
+        raise HTTPException(status_code=404, detail="League not found")
+
+    # Delete teams not in allowed list
+    to_delete = list(db["team"].find({
+        "league_id": league_id,
+        "name": {"$nin": list(ALLOWED_CLUBS_SET)}
+    }, {"_id": 1}))
+    deleted_count = 0
+    if to_delete:
+        ids = [t["_id"] for t in to_delete]
+        res = db["team"].delete_many({"_id": {"$in": ids}})
+        deleted_count = res.deleted_count
+
+    # Ensure all allowed teams exist
+    created_count = 0
+    for name in ALLOWED_CLUBS:
+        if not db["team"].find_one({"league_id": league_id, "name": name}):
+            create_document("team", {"league_id": league_id, "name": name, "short_name": name})
+            created_count += 1
+
+    return {
+        "deleted_non_allowed": deleted_count,
+        "created_missing": created_count,
+        "allowed": ALLOWED_CLUBS,
+    }
+
+# Seed example league with provided teams (enforces exact set)
 @app.post("/api/seed/maltese-youth-league")
 def seed_maltese_league():
     name = "Maltese Youth League"
@@ -270,15 +315,11 @@ def seed_maltese_league():
         league_id = str(existing["_id"])
     else:
         league_id = create_document("league", {"name": name, "season": None, "country": "Malta"})
-    teams = [
-        "HIBS","BIRKIRKARA","ZABBAR","BALZAN","NAXXAR","QORMI","MARSASKALA","KIRKOP","GOZO","MELLIEHA"
-    ]
-    created = 0
-    for t in teams:
-        if not db["team"].find_one({"league_id": league_id, "name": t}):
-            create_document("team", {"league_id": league_id, "name": t, "short_name": t})
-            created += 1
-    return {"league_id": league_id, "teams_created": created}
+
+    # Remove any teams not in the allowed list and ensure allowed list is present
+    _ = enforce_teams(league_id)
+
+    return {"league_id": league_id, "teams": ALLOWED_CLUBS}
 
 
 @app.get("/test")
