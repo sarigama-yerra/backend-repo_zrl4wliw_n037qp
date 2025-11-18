@@ -1,0 +1,18 @@
+INFO:     Will watch for changes in these directories: ['/home/workspace']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [338] using StatReload
+INFO:     Started server process [340]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.20.0.1:42804 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+INFO:     172.20.0.1:42812 - "GET /api/leagues HTTP/1.1" 200 OK
+INFO:     172.20.0.1:42822 - "GET /api/leagues HTTP/1.1" 200 OK
+INFO:     172.20.0.1:42788 - "POST /api/seed/maltese-youth-league HTTP/1.1" 200 OK
+INFO:     172.20.0.1:42802 - "POST /api/seed/maltese-youth-league HTTP/1.1" 200 OK
+INFO:     172.20.0.1:46216 - "GET /api/leagues HTTP/1.1" 200 OK
+INFO:     172.20.0.1:46226 - "GET /api/leagues HTTP/1.1" 200 OK
+INFO:     172.20.0.1:46214 - "POST /api/seed/maltese-youth-league HTTP/1.1" 200 OK
+INFO:     172.20.0.1:46200 - "POST /api/seed/maltese-youth-league HTTP/1.1" 200 OK
+INFO:     172.20.0.1:36320 - "GET /api/leagues/691c82e0a6a366bf4a987731/standings HTTP/1.1" 200 OK
+INFO:     172.20.0.1:36338 - "GET /api/leagues/691c82e0a6a366bf4a987731/matches/upcoming HTTP/1.1" 200 OK
+INFO:     172.20.0.1:36322 - "GET /api/leagues/691c82e0a6a366bf4a987731/matches/results HTTP/1.1" 200 OK

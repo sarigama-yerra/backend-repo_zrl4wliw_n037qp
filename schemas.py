@@ -1,48 +1,54 @@
 """
-Database Schemas
+Database Schemas for Football Information App
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model below corresponds to a MongoDB collection.
+Collection name is the lowercase class name (e.g., League -> "league").
 """
-
+from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
-# Example schemas (replace with your own):
+class League(BaseModel):
+    name: str = Field(..., description="League name")
+    season: Optional[str] = Field(None, description="Season label, e.g., 2024/25")
+    country: Optional[str] = Field("Malta", description="Country of the league")
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Team(BaseModel):
+    league_id: str = Field(..., description="League ID (stringified ObjectId)")
+    name: str = Field(..., description="Team name")
+    short_name: Optional[str] = Field(None, description="Abbreviation or short name")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Match(BaseModel):
+    league_id: str = Field(..., description="League ID (stringified ObjectId)")
+    home_team_id: str = Field(..., description="Home team ID")
+    away_team_id: str = Field(..., description="Away team ID")
+    match_date: Optional[str] = Field(None, description="ISO date string (UTC)")
+    venue: Optional[str] = Field(None, description="Stadium/venue")
+    status: str = Field("scheduled", description="scheduled | played | postponed | cancelled")
+    home_score: Optional[int] = Field(None, ge=0)
+    away_score: Optional[int] = Field(None, ge=0)
 
-# Add your own schemas here:
-# --------------------------------------------------
+class StandingRow(BaseModel):
+    team_id: str
+    team_name: str
+    P: int
+    W: int
+    D: int
+    L: int
+    F: int
+    A: int
+    GD: int
+    Pts: int
+    position: Optional[int] = None
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Standing(BaseModel):
+    league_id: str
+    rows: List[StandingRow]
+    last_updated: Optional[str] = None
+
+class AppUser(BaseModel):
+    name: str
+    email: str
+    league_ids: Optional[List[str]] = Field(default_factory=list, description="Leagues this user can view")
+    role: str = Field("user", description="user | admin")
+    is_active: bool = True
